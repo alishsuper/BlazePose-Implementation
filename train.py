@@ -1,10 +1,9 @@
 #!~/miniconda3/envs/tf2/bin/python
-import os
 import tensorflow as tf
 import time
 from model import BlazePose
-from config import total_epoch, train_mode, continue_train, show_batch_loss
-from analysis import save_record, load_record
+from config import total_epoch, train_mode
+from analysis import save_record
 
 if train_mode:
     from data import finetune_train as train_dataset
@@ -25,21 +24,16 @@ def grad(model, inputs, targets):
     return loss_value, tape.gradient(loss_value, model.trainable_variables)
 
 # continue train
-if continue_train > 0:
-    model.load_weights(checkpoint_path.format(epoch=continue_train))
-    # continue recording
-    train_loss_results, train_accuracy_results, val_accuracy_results = load_record()
-else:
-    if train_mode:
-        # start fine-tune
-        from config import best_pre_train
-        model.load_weights(checkpoint_path.format(epoch=best_pre_train))
-    
-    # start from epoch 0
-    # Initial for record of the training process
-    train_loss_results = []
-    train_accuracy_results = []
-    val_accuracy_results = []
+if train_mode:
+    # start fine-tune
+    from config import best_pre_train
+    model.load_weights(checkpoint_path.format(epoch=best_pre_train))
+
+# start from epoch 0
+# Initial for record of the training process
+train_loss_results = []
+train_accuracy_results = []
+val_accuracy_results = []
 
 if train_mode:
     # finetune
@@ -59,17 +53,12 @@ for x, y in test_dataset:
     val_accuracy(y, model(x))
 print("Initial Validation accuracy: {:.5%}".format(val_accuracy.result()))
 
-# make sure continue has any epoch to train
-assert(continue_train < total_epoch)
-
-for epoch in range(continue_train, total_epoch):
+for epoch in range(total_epoch):
     epoch_loss_avg = tf.keras.metrics.Mean()
     epoch_accuracy = tf.keras.metrics.MeanSquaredError()
     val_accuracy = tf.keras.metrics.MeanSquaredError()
 
     # Training loop
-    if show_batch_loss:
-        batch_index = 0
     for x, y in train_dataset:
         # Optimize
         loss_value, grads = grad(model, x, y)
@@ -79,14 +68,7 @@ for epoch in range(continue_train, total_epoch):
         epoch_loss_avg(loss_value)
         # Calculate error from Ground truth
         epoch_accuracy(y, model(x))
-        
-        if show_batch_loss:
-            print("Epoch {:03d}, Batch {:03d}: Train Loss: {:.3f}".format(epoch,
-                batch_index,
-                loss_value
-            ))
-            batch_index += 1
-    
+            
     # Record loss and accuracy
     train_loss_results.append(epoch_loss_avg.result())
     train_accuracy_results.append(epoch_accuracy.result())

@@ -1,10 +1,8 @@
 #!~/miniconda3/envs/tf2/bin/python
-import os
-import platform
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints, batch_size, gaussian_sigma, gpu_dynamic_memory
+from config import num_joints, batch_size
 
 # guassian generation
 def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
@@ -26,28 +24,7 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
     img_x = max(0, ul[0]), min(br[0], heat_size)
     img_y = max(0, ul[1]), min(br[1], heat_size)
     heatmap[img_y[0]:img_y[1], img_x[0]:img_x[1]] = g[g_y[0]:g_y[1], g_x[0]:g_x[1]]
-    """
-    heatmap *= 255
-    heatmap = heatmap.astype(np.uint8)
-    cv2.imshow("debug", heatmap)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """
     return heatmap
-
-if gpu_dynamic_memory:
-    # Limit GPU memory usage if necessary
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print(e)
 
 # read annotations
 annotations = loadmat("./dataset/lsp/joints.mat")
@@ -69,8 +46,7 @@ for i in range(2000):
     # generate heatmap set
     for j in range(num_joints):
         _joint = (label[i, j, 0:2] // 2).astype(np.uint16)
-        # print(_joint)
-        heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = 128, sigma = gaussian_sigma)
+        heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = 128, sigma = 4)
     # print status
     if not i%(2000//80):
         print(">", end='')
