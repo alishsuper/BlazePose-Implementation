@@ -22,9 +22,7 @@ class BlazeBlock(tf.keras.Model):
         if channel_padding:
             self.downsample_b = tf.keras.models.Sequential([
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2)),
-                # # 因为我实在是不会写channel padding的实现，所以这里用了个1x1的卷积来凑个数，嘤~
                 # tf.keras.layers.Conv2D(filters=channel, kernel_size=1, activation=None)
-                # Update: 最终，还是自己写出来了，嘤～
                 ChannelPadding(channels=channel)
             ])
         else:

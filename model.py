@@ -133,5 +133,6 @@ class BlazePose(tf.keras.Model):
         x = self.conv15(x)
         # shape = (1, 2, 2, 288)
         joints = self.conv16(x)
+        
         result = [heatmap, joints]
         return result[train_mode] # heatmap, joints
