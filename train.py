@@ -1,11 +1,11 @@
 #!~/miniconda3/envs/tf2/bin/python
 import tensorflow as tf
-import time
 from model import BlazePose
-from config import total_epoch, train_mode, best_pre_train
+from config import total_epoch, train_mode, best_pre_train, continue_train
 
 checkpoint_path_regression = "checkpoints_regression/cp-{epoch:04d}.ckpt"
 checkpoint_path_heatmap = "checkpoints_heatmap/cp-{epoch:04d}.ckpt"
+
 if train_mode:
     from data import finetune_train as train_dataset
     from data import finetune_validation as test_dataset
@@ -24,19 +24,23 @@ def grad(model, inputs, targets):
         loss_value = loss_func(y_true=targets, y_pred=model(inputs))
     return loss_value, tape.gradient(loss_value, model.trainable_variables)
 
+# continue train
+if continue_train > 0:
+    model.load_weights(checkpoint_path.format(epoch=continue_train))
+else:
+    if train_mode:
+        model.load_weights(checkpoint_path_heatmap.format(epoch=best_pre_train))
+
 if train_mode:
     # start fine-tune
-    model.load_weights(checkpoint_path_heatmap.format(epoch=best_pre_train))
     for layer in model.layers[0:16]:
-        print(layer)
         layer.trainable = False
 else:
     # pre-train
     for layer in model.layers[16:24]:
-        print(layer)
         layer.trainable = False
 
-for epoch in range(total_epoch):
+for epoch in range(continue_train, total_epoch):
     epoch_loss_avg = tf.keras.metrics.Mean()
     epoch_accuracy = tf.keras.metrics.MeanSquaredError()
     val_accuracy = tf.keras.metrics.MeanSquaredError()

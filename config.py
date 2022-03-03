@@ -6,6 +6,8 @@ total_epoch = 200
 # Train mode: 0-heatmap, 1-regression
 train_mode = 1
 
+continue_train = 194
+
 best_pre_train = 99 # num of epoch where the training loss drops but testing accuracy achieve the optimal
 
 # for test only
