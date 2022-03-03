@@ -21,7 +21,7 @@ joints.mat contains 14 joint locations for each image along with
 a binary value specifying joint visibility.
 
 The ordering of the joints is as follows:
-
+```
 Right ankle
 Right knee
 Right hip
@@ -36,6 +36,7 @@ Left elbow
 Left wrist
 Neck
 Head top
+```
 
 ## Model
 ![image](https://user-images.githubusercontent.com/14852495/156509720-2d900f7b-8953-4219-9aa8-dea97dccb93c.png)
