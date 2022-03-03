@@ -39,6 +39,8 @@ Head top
 
 ## Model
 ![image](https://user-images.githubusercontent.com/14852495/156509720-2d900f7b-8953-4219-9aa8-dea97dccb93c.png)
+![image](https://user-images.githubusercontent.com/14852495/156510922-5d962d87-e021-4a3f-9c67-3afbd168a022.png)
+
 
 ## Train
 1. Pre-train the heatmap branch.
@@ -52,7 +54,7 @@ Head top
 ## Test
 1. Set `epoch_to_test` to the epoch you would like to test.
 
-2. Run `python2 test.py`.
+2. Run `python test.py`.
 
 ## Reference
 
