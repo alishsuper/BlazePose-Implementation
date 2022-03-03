@@ -1,16 +1,5 @@
 import tensorflow as tf
 
-class ChannelPadding(tf.keras.layers.Layer):
-    def __init__(self, channels):
-        super(ChannelPadding, self).__init__()
-        self.channels = channels
-
-    def build(self, input_shapes):
-        self.pad_shape = tf.constant([[0, 0], [0, 0], [0, 0], [0, self.channels - input_shapes[-1]]])
-
-    def call(self, input):
-        return tf.pad(input, self.pad_shape)
-
 class BlazeBlock(tf.keras.Model):
     def __init__(self, block_num = 3, channel = 48, channel_padding = 1):
         super(BlazeBlock, self).__init__()
@@ -22,8 +11,7 @@ class BlazeBlock(tf.keras.Model):
         if channel_padding:
             self.downsample_b = tf.keras.models.Sequential([
                 tf.keras.layers.MaxPool2D(pool_size=(2, 2)),
-                # tf.keras.layers.Conv2D(filters=channel, kernel_size=1, activation=None)
-                ChannelPadding(channels=channel)
+                tf.keras.layers.Conv2D(filters=channel, kernel_size=1, activation=None)
             ])
         else:
             # channel number invariance

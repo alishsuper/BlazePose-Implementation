@@ -103,15 +103,15 @@ class BlazePose(tf.keras.Model):
         # shape = (1, 128, 128, 24)
         x = x + self.conv2_1(x)   # <-- skip connection
         x = tf.keras.activations.relu(x)
-        #   --> I don't know why the relu layer is put after skip connection?
         x = x + self.conv2_2(x)
         y0 = tf.keras.activations.relu(x)
 
+        # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
-        y1 = self.conv3(y0)
-        y2 = self.conv4(y1)
-        y3 = self.conv5(y2)
-        y4 = self.conv6(y3)
+        y1 = self.conv3(y0) # output res: 64
+        y2 = self.conv4(y1) # output res:  32
+        y3 = self.conv5(y2) # output res:  16
+        y4 = self.conv6(y3) # output res:  8
         # shape = (1, 8, 8, 288)
 
         x = self.conv7a(y4) + self.conv7b(y3)
