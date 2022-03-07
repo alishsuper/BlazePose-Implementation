@@ -90,11 +90,26 @@ class BlazePose(tf.keras.Model):
             BlazeBlock(block_num = 7, channel = 288, channel_padding = 0)
         ])
 
+        # self.conv16 = tf.keras.models.Sequential([
+        #     tf.keras.layers.GlobalAveragePooling2D(),
+        #     # shape = (1, 1, 1, 288)
+        #     tf.keras.layers.Dense(units=3*num_joints, activation=None),
+        #     tf.keras.layers.Reshape((num_joints, 3))
+        # ])
+
+        # using regression + sigmoid
         self.conv16 = tf.keras.models.Sequential([
             tf.keras.layers.GlobalAveragePooling2D(),
             # shape = (1, 1, 1, 288)
-            tf.keras.layers.Dense(units=3*num_joints, activation=None),
-            tf.keras.layers.Reshape((num_joints, 3))
+            tf.keras.layers.Dense(units=2*num_joints, activation=None),
+            tf.keras.layers.Reshape((num_joints, 2))
+        ])
+
+        self.conv17 = tf.keras.models.Sequential([
+            tf.keras.layers.GlobalAveragePooling2D(),
+            # shape = (1, 1, 1, 288)
+            tf.keras.layers.Dense(units=num_joints, activation="sigmoid"),
+            tf.keras.layers.Reshape((num_joints, 1))
         ])
 
     def call(self, x):
@@ -132,7 +147,12 @@ class BlazePose(tf.keras.Model):
         # shape = (1, 8, 8, 288)
         x = self.conv15(x)
         # shape = (1, 2, 2, 288)
-        joints = self.conv16(x)
+        # joints = self.conv16(x)
+
+        # using regression + sigmoid
+        coordinates = self.conv16(x)
+        visibility = self.conv17(x)
+        joints = tf.keras.layers.Concatenate(axis=2)([coordinates,  visibility])
         
         result = [heatmap, joints]
         return result[train_mode] # heatmap, joints
