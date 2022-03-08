@@ -61,9 +61,9 @@ Head top
 ## Performance Comparison
 | Model                                                | LSP Dataset                                                    | LSPet Dataset |
 | ---------------------------------------------------- | -------------------------------------------------------------- | ------------- |
-| Only Linear (x, y, v)                                | PCK Score – 36.53% Train MSE Loss - 7.19 Val MSE Loss – 742.19 | |
-| Linear (x, y) + Sigmoid (v) (Concatenate two layers) | PCK Score – 38.6% Train MSE Loss - 1.05 Val MSE Loss – 705.67  | |
-| Linear (x, y) + Sigmoid (v) (Separate two outputs)   | PCK Score – 37.74% Train MSE Los - 2.97 Val MSE Loss - 556.32  | |
+| Only Linear (x, y, v)                                | PCK Score – 36.53% <br /> Train MSE Loss - 7.19 <br /> Val MSE Loss – 742.19 | |
+| Linear (x, y) + Sigmoid (v) (Concatenate two layers) | PCK Score – 38.6% <br /> Train MSE Loss - 1.05 <br /> Val MSE Loss – 705.67  | |
+| Linear (x, y) + Sigmoid (v) (Separate two outputs)   | PCK Score – 37.74% <br /> Train MSE Los - 2.97 <br /> Val MSE Loss - 556.32  | |
 
 ## Reference
 
