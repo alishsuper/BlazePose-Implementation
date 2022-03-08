@@ -59,7 +59,7 @@ Head top
 2. Run `python test.py`.
 
 ## Performance Comparison
-| Model                                                | LSP Dataset <br /> Train - 1000 images <br /> Val - 1000 images              | LSPet Dataset Train - 2500 images <br /> Val - 500 images |
+| Model                                                | LSP Dataset <br /> Train - 1000 images <br /> Val - 1000 images              | LSPet Dataset <br /> Train - 2500 images <br /> Val - 500 images |
 | ---------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- |
 | Only Linear (x, y, v)                                | PCK Score – 36.53% <br /> Train MSE Loss - 7.19 <br /> Val MSE Loss – 742.19 | PCK Score – 9.27% <br /> Train MSE Loss - 24.82 <br /> Val MSE Loss – 6244.79 |
 | Linear (x, y) + Sigmoid (v) (Concatenate two layers) | PCK Score – 38.6% <br /> Train MSE Loss - 1.05 <br /> Val MSE Loss – 705.67  | |
