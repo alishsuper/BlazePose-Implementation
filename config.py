@@ -5,6 +5,7 @@ total_epoch = 500
 
 # Train mode: 0-heatmap, 1-regression
 train_mode = 1
+eval_mode = 0
 
 continue_train = 0
 
