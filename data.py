@@ -27,15 +27,25 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
     return heatmap
 
 # read annotations
-annotations = loadmat("./dataset/lsp/joints.mat")
-label = annotations["joints"].swapaxes(0, 2)    # shape (3, 14, 2000) -> (2000, 14, 3)
+dataset = "lspet" # "lsp"
+number_images = 3000
+annotations = loadmat("./dataset/" + dataset + "/joints.mat")
+# LSP
+# label = annotations["joints"].swapaxes(0, 2)    # shape (3, 14, 2000) -> (2000, 14, 3)
+
+# LSPET
+label = annotations["joints"].swapaxes(0, 1)    # shape (14, 3, 10000) -> (3, 14, 10000)
+label = label.swapaxes(0, 2)                    # shape (3, 14, 10000) -> (10000, 14, 3)
 
 # read images
-data = np.zeros([2000, 256, 256, 3])
-heatmap_set = np.zeros((2000, 128, 128, num_joints), dtype=np.float32)
+data = np.zeros([number_images, 256, 256, 3])
+heatmap_set = np.zeros((number_images, 128, 128, num_joints), dtype=np.float32)
 print("Reading dataset...")
-for i in range(2000):
-    FileName = "./dataset/lsp/images/im%04d.jpg" % (i + 1)
+for i in range(number_images):
+    # lsp
+    # FileName = "./dataset/" + dataset + "/images/im%04d.jpg" % (i + 1)
+    # lspet
+    FileName = "./dataset/" + dataset + "/images/im%05d.jpg" % (i + 1)
     img = tf.io.read_file(FileName)
     img = tf.image.decode_image(img)
     img_shape = img.shape
@@ -48,21 +58,21 @@ for i in range(2000):
         _joint = (label[i, j, 0:2] // 2).astype(np.uint16)
         heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = 128, sigma = 4)
     # print status
-    if not i%(2000//80):
+    if not i%(number_images // 80):
         print(">", end='')
 
 # dataset
 print("\nGenerating training and testing data batches...")
-train_dataset = tf.data.Dataset.from_tensor_slices((data[0:1000], heatmap_set[0:1000]))
-test_dataset = tf.data.Dataset.from_tensor_slices((data[1000:-1], heatmap_set[1000:-1]))
+train_dataset = tf.data.Dataset.from_tensor_slices((data[0:(number_images - 1000)], heatmap_set[0:(number_images - 1000)]))
+test_dataset = tf.data.Dataset.from_tensor_slices((data[-1000:], heatmap_set[-1000:]))
 
 SHUFFLE_BUFFER_SIZE = 1000
 train_dataset = train_dataset.shuffle(SHUFFLE_BUFFER_SIZE).batch(batch_size)
 test_dataset = test_dataset.batch(batch_size)
 
 # Finetune
-finetune_train = tf.data.Dataset.from_tensor_slices((data[0:1000], label[0:1000]))
-finetune_validation = tf.data.Dataset.from_tensor_slices((data[1000:-1], label[1000:-1]))
+finetune_train = tf.data.Dataset.from_tensor_slices((data[0:(number_images - 1000)], label[0:(number_images - 1000)]))
+finetune_validation = tf.data.Dataset.from_tensor_slices((data[-1000:], label[-1000:]))
 
 finetune_train = finetune_train.shuffle(SHUFFLE_BUFFER_SIZE).batch(batch_size)
 finetune_validation = finetune_validation.batch(batch_size)

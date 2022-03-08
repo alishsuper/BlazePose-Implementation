@@ -21,16 +21,17 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 checkpoint_path_regression = "checkpoints_regression/cp-{epoch:04d}.ckpt"
 model.load_weights(checkpoint_path_regression.format(epoch=epoch_to_test))
 
-y = np.zeros((2000, 14, 3)).astype(np.uint8)
+number_images = 3000
+y = np.zeros((number_images, 14, 3)).astype(np.uint8)
 
 # separate outputs
 # y = np.zeros((2000, 14, 2)).astype(np.uint8)
 # visibility = np.zeros((2000, 14, 2)).astype(np.uint8)
 batch_size = 20
-for i in range(0, 2000, batch_size):
-    if i + batch_size >= 2000:
+for i in range(0, number_images, batch_size):
+    if i + batch_size >= number_images:
         # last batch
-        y[i : 2000] = model(data[i : i + batch_size]).numpy()
+        y[i : number_images] = model(data[i : i + batch_size]).numpy()
 
         # separate outputs
         # y[i : 2000], visibility[i : 2000] = model(data[i : i + batch_size])
@@ -49,7 +50,7 @@ if eval_mode:
     label = label[:, :, 0:2].astype(float)
     score_j = np.zeros(14)
     pck_metric = 0.5
-    for i in range(1000, 2000):
+    for i in range(number_images - 500, number_images):
         # validation part
         pck_h = Eclidian2(label[i][12], label[i][13])
         for j in range(14):
@@ -66,7 +67,7 @@ if eval_mode:
 else:
 
     # GENERATE RESULT IMAGES
-    for t in range(2000):
+    for t in range(number_images - 500, number_images):
         skeleton = y[t]
         img = data[t].astype(np.uint8)
         # draw the joints
