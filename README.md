@@ -58,6 +58,13 @@ Head top
 
 2. Run `python test.py`.
 
+## Performance Comparison
+| Model                                                | LSP Dataset                                                    | LSPet Dataset |
+| ---------------------------------------------------- | -------------------------------------------------------------- | ------------- |
+| Only Linear (x, y, v)                                | PCK Score – 36.53% Train MSE Loss - 7.19 Val MSE Loss – 742.19 | |
+| Linear (x, y) + Sigmoid (v) (Concatenate two layers) | PCK Score – 38.6% Train MSE Loss - 1.05 Val MSE Loss – 705.67  | |
+| Linear (x, y) + Sigmoid (v) (Separate two outputs)   | PCK Score – 37.74% Train MSE Los - 2.97 Val MSE Loss - 556.32  | |
+
 ## Reference
 
 If the original paper helps your research, you can cite this paper in the LaTex file with:
