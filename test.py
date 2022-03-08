@@ -22,21 +22,31 @@ checkpoint_path_regression = "checkpoints_regression/cp-{epoch:04d}.ckpt"
 model.load_weights(checkpoint_path_regression.format(epoch=epoch_to_test))
 
 y = np.zeros((2000, 14, 3)).astype(np.uint8)
+
+# separate outputs
+# y = np.zeros((2000, 14, 2)).astype(np.uint8)
+# visibility = np.zeros((2000, 14, 2)).astype(np.uint8)
 batch_size = 20
 for i in range(0, 2000, batch_size):
     if i + batch_size >= 2000:
         # last batch
         y[i : 2000] = model(data[i : i + batch_size]).numpy()
+
+        # separate outputs
+        # y[i : 2000], visibility[i : 2000] = model(data[i : i + batch_size])
     else:
         # other batches
         y[i : i + batch_size] = model(data[i : i + batch_size]).numpy()
+
+        # separate outputs
+        # y[i : i + batch_size], visibility[i : i + batch_size] = model(data[i : i + batch_size])
         print("=", end="")
 print(">")
 
 if eval_mode:
     # CALCULATE PCK SCORE
-    y = y[:,:,0:2].astype(float)
-    label = label[:,:,0:2].astype(float)
+    y = y[:, :, 0:2].astype(float)
+    label = label[:, :, 0:2].astype(float)
     score_j = np.zeros(14)
     pck_metric = 0.5
     for i in range(1000, 2000):

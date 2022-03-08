@@ -90,27 +90,28 @@ class BlazePose(tf.keras.Model):
             BlazeBlock(block_num = 7, channel = 288, channel_padding = 0)
         ])
 
-        # self.conv16 = tf.keras.models.Sequential([
-        #     tf.keras.layers.GlobalAveragePooling2D(),
-        #     # shape = (1, 1, 1, 288)
-        #     tf.keras.layers.Dense(units=3*num_joints, activation=None),
-        #     tf.keras.layers.Reshape((num_joints, 3))
-        # ])
-
-        # using regression + sigmoid
+        # using only linear
         self.conv16 = tf.keras.models.Sequential([
             tf.keras.layers.GlobalAveragePooling2D(),
             # shape = (1, 1, 1, 288)
-            tf.keras.layers.Dense(units=2*num_joints, activation=None),
-            tf.keras.layers.Reshape((num_joints, 2))
+            tf.keras.layers.Dense(units=3*num_joints, activation=None),
+            tf.keras.layers.Reshape((num_joints, 3))
         ])
 
-        self.conv17 = tf.keras.models.Sequential([
-            tf.keras.layers.GlobalAveragePooling2D(),
-            # shape = (1, 1, 1, 288)
-            tf.keras.layers.Dense(units=num_joints, activation="sigmoid"),
-            tf.keras.layers.Reshape((num_joints, 1))
-        ])
+        # using regression + sigmoid
+        # self.conv16 = tf.keras.models.Sequential([
+        #     tf.keras.layers.GlobalAveragePooling2D(),
+        #     # shape = (1, 1, 1, 288)
+        #     tf.keras.layers.Dense(units=2*num_joints, activation=None, name="Dense_1"),
+        #     tf.keras.layers.Reshape((num_joints, 2))
+        # ])
+
+        # self.conv17 = tf.keras.models.Sequential([
+        #     tf.keras.layers.GlobalAveragePooling2D(),
+        #     # shape = (1, 1, 1, 288)
+        #     tf.keras.layers.Dense(units=num_joints, activation="sigmoid", name="Dense_2"),
+        #     tf.keras.layers.Reshape((num_joints, 1))
+        # ])
 
     def call(self, x):
         # shape = (1, 256, 256, 3)
@@ -147,12 +148,19 @@ class BlazePose(tf.keras.Model):
         # shape = (1, 8, 8, 288)
         x = self.conv15(x)
         # shape = (1, 2, 2, 288)
-        # joints = self.conv16(x)
 
-        # using regression + sigmoid
-        coordinates = self.conv16(x)
-        visibility = self.conv17(x)
-        joints = tf.keras.layers.Concatenate(axis=2)([coordinates,  visibility])
-        
+        # using only linear
+        joints = self.conv16(x)
+
+        # using linear + sigmoid
+        # coordinates = self.conv16(x)
+        # visibility = self.conv17(x)
+        # joints = tf.keras.layers.Concatenate(axis=2)([coordinates,  visibility])
+
         result = [heatmap, joints]
+
+        # create separate outputs for coordinates and visibility
+        # visibility = tf.keras.layers.Concatenate(axis=2)([visibility,  visibility])
+        
+        # result = [heatmap, (coordinates,  visibility)]
         return result[train_mode] # heatmap, joints
