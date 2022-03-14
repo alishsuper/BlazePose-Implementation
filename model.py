@@ -1,10 +1,9 @@
 import tensorflow as tf
 from layers import BlazeBlock
-from config import num_joints, train_mode
+from config import num_joints
 
-class BlazePose(tf.keras.Model):
+class BlazePose():
     def __init__(self):
-        super(BlazePose, self).__init__()
         self.conv1 = tf.keras.layers.Conv2D(
             filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu'
         )
@@ -67,55 +66,51 @@ class BlazePose(tf.keras.Model):
 
         # ---------- Regression branch ----------
         #  shape = (1, 64, 64, 48)
-        self.conv12a = BlazeBlock(block_num = 4, channel = 96)    # input res: 64
+        self.conv12a = BlazeBlock(block_num = 4, channel = 96, name_prefix="regression_conv12a_")    # input res: 64
         self.conv12b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=96, kernel_size=1, activation="relu")
-        ])
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv12b_depthwise"),
+            tf.keras.layers.Conv2D(filters=96, kernel_size=1, activation="relu", name="regression_conv12b_conv1x1")
+        ], name="regression_conv12b")
 
-        self.conv13a = BlazeBlock(block_num = 5, channel = 192)   # input res: 32
+        self.conv13a = BlazeBlock(block_num = 5, channel = 192, name_prefix="regression_conv13a_")   # input res: 32
         self.conv13b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=192, kernel_size=1, activation="relu")
-        ])
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv13b_depthwise"),
+            tf.keras.layers.Conv2D(filters=192, kernel_size=1, activation="relu", name="regression_conv13b_conv1x1")
+        ], name="regression_conv13b")
 
-        self.conv14a = BlazeBlock(block_num = 6, channel = 288)   # input res: 16
+        self.conv14a = BlazeBlock(block_num = 6, channel = 288, name_prefix="regression_conv14a_")   # input res: 16
         self.conv14b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=288, kernel_size=1, activation="relu")
-        ])
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv14b_depthwise"),
+            tf.keras.layers.Conv2D(filters=288, kernel_size=1, activation="relu", name="regression_conv14b_conv1x1")
+        ], name="regression_conv14b")
 
         self.conv15 = tf.keras.models.Sequential([
-            BlazeBlock(block_num = 7, channel = 288, channel_padding = 0),
-            BlazeBlock(block_num = 7, channel = 288, channel_padding = 0)
-        ])
+            BlazeBlock(block_num = 7, channel = 288, channel_padding = 0, name_prefix="regression_conv15a_"),
+            BlazeBlock(block_num = 7, channel = 288, channel_padding = 0, name_prefix="regression_conv15b_")
+        ], name="regression_conv15")
 
-        # using only linear
+        # using regression + sigmoid
         self.conv16 = tf.keras.models.Sequential([
             tf.keras.layers.GlobalAveragePooling2D(),
             # shape = (1, 1, 1, 288)
-            tf.keras.layers.Dense(units=3*num_joints, activation=None),
-            tf.keras.layers.Reshape((num_joints, 3))
-        ])
+            # coordinates
+            tf.keras.layers.Dense(units=2*num_joints, activation=None, name="regression_final_dense_1"),
+            tf.keras.layers.Reshape((num_joints, 2))
+        ], name="coordinates")
 
-        # using regression + sigmoid
-        # self.conv16 = tf.keras.models.Sequential([
-        #     tf.keras.layers.GlobalAveragePooling2D(),
-        #     # shape = (1, 1, 1, 288)
-        #     tf.keras.layers.Dense(units=2*num_joints, activation=None, name="Dense_1"),
-        #     tf.keras.layers.Reshape((num_joints, 2))
-        # ])
+        self.conv17 = tf.keras.models.Sequential([
+            tf.keras.layers.GlobalAveragePooling2D(),
+            # shape = (1, 1, 1, 288)
+            # visibility
+            tf.keras.layers.Dense(units=num_joints, activation="sigmoid", name="regression_final_dense_2"),
+            tf.keras.layers.Reshape((num_joints, 1))
+        ], name="visibility")
 
-        # self.conv17 = tf.keras.models.Sequential([
-        #     tf.keras.layers.GlobalAveragePooling2D(),
-        #     # shape = (1, 1, 1, 288)
-        #     tf.keras.layers.Dense(units=num_joints, activation="sigmoid", name="Dense_2"),
-        #     tf.keras.layers.Reshape((num_joints, 1))
-        # ])
+    def call(self):
+        input_x = tf.keras.layers.Input(shape=(256, 256, 3))
 
-    def call(self, x):
         # shape = (1, 256, 256, 3)
-        x = self.conv1(x)
+        x = self.conv1(input_x)
         # shape = (1, 128, 128, 24)
         x = x + self.conv2_1(x)   # <-- skip connection
         x = tf.keras.activations.relu(x)
@@ -139,6 +134,12 @@ class BlazePose(tf.keras.Model):
         # shape = (1, 128, 128, 8)
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
 
+        # Stop gradient for regression
+        x = tf.keras.backend.stop_gradient(x)
+        y2 = tf.keras.backend.stop_gradient(y2)
+        y3 = tf.keras.backend.stop_gradient(y3)
+        y4 = tf.keras.backend.stop_gradient(y4)
+
         # ---------- regression branch ----------
         x = self.conv12a(x) + self.conv12b(y2)
         # shape = (1, 32, 32, 96)
@@ -149,18 +150,9 @@ class BlazePose(tf.keras.Model):
         x = self.conv15(x)
         # shape = (1, 2, 2, 288)
 
-        # using only linear
-        joints = self.conv16(x)
-
         # using linear + sigmoid
-        # coordinates = self.conv16(x)
-        # visibility = self.conv17(x)
-        # joints = tf.keras.layers.Concatenate(axis=2)([coordinates,  visibility])
+        coordinates = self.conv16(x)
+        visibility = self.conv17(x)
+        result = [heatmap, coordinates, visibility]
 
-        result = [heatmap, joints]
-
-        # create separate outputs for coordinates and visibility
-        # visibility = tf.keras.layers.Concatenate(axis=2)([visibility,  visibility])
-        
-        # result = [heatmap, (coordinates,  visibility)]
-        return result[train_mode] # heatmap, joints
+        return tf.keras.Model(inputs=input_x, outputs=result)

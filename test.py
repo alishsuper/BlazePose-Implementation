@@ -1,6 +1,7 @@
-import cv2
+import cv2, os
 import tensorflow as tf
 import numpy as np
+import pathlib
 from model import BlazePose
 from config import epoch_to_test, eval_mode
 from data import data, label
@@ -13,44 +14,38 @@ def Eclidian2(a, b):
         summer += (a[i] - b[i]) ** 2
     return summer
 
-model = BlazePose()
-model.compile(optimizer=tf.keras.optimizers.Adam(),
-              loss=tf.keras.losses.MeanSquaredError(),
-              metrics=[tf.keras.metrics.MeanSquaredError()])
+checkpoint_path_regression = "checkpoints_regression"
+loss_func_mse = tf.keras.losses.MeanSquaredError()
+loss_func_bce = tf.keras.losses.BinaryCrossentropy()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
-checkpoint_path_regression = "checkpoints_regression/cp-{epoch:04d}.ckpt"
-model.load_weights(checkpoint_path_regression.format(epoch=epoch_to_test))
+model = BlazePose().call()
+model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
 
-number_images = 3000
-y = np.zeros((number_images, 14, 3)).astype(np.uint8)
+print("Load regression weights", os.path.join(checkpoint_path_regression, "models/model_ep{}.h5".format(epoch_to_test)))
+model.load_weights(os.path.join(checkpoint_path_regression, "models/model_ep{}.h5".format(epoch_to_test)))
 
-# separate outputs
-# y = np.zeros((2000, 14, 2)).astype(np.uint8)
-# visibility = np.zeros((2000, 14, 2)).astype(np.uint8)
+number_images = 2000
+coordinates = np.zeros((number_images, 14, 2)).astype(np.uint8)
+visibility = np.zeros((number_images, 14, 1)).astype(np.uint8)
 batch_size = 20
 for i in range(0, number_images, batch_size):
     if i + batch_size >= number_images:
         # last batch
-        y[i : number_images] = model(data[i : i + batch_size]).numpy()
-
-        # separate outputs
-        # y[i : 2000], visibility[i : 2000] = model(data[i : i + batch_size])
+        _, coordinates[i : number_images], visibility[i : number_images] = model.predict(data[i : i + batch_size])
     else:
         # other batches
-        y[i : i + batch_size] = model(data[i : i + batch_size]).numpy()
-
-        # separate outputs
-        # y[i : i + batch_size], visibility[i : i + batch_size] = model(data[i : i + batch_size])
-        print("=", end="")
+        _, coordinates[i : i + batch_size], visibility[i : i + batch_size] = model.predict(data[i : i + batch_size])
+    print("=", end="")
 print(">")
 
 if eval_mode:
     # CALCULATE PCK SCORE
-    y = y[:, :, 0:2].astype(float)
+    y = coordinates.astype(float)
     label = label[:, :, 0:2].astype(float)
     score_j = np.zeros(14)
     pck_metric = 0.5
-    for i in range(number_images - 500, number_images):
+    for i in range(number_images):
         # validation part
         pck_h = Eclidian2(label[i][12], label[i][13])
         for j in range(14):
@@ -65,10 +60,10 @@ if eval_mode:
     print(score_j)
     print("Average = %f%%" % score_avg)
 else:
-
+    pathlib.Path("result").mkdir(parents=True, exist_ok=True)
     # GENERATE RESULT IMAGES
-    for t in range(number_images - 500, number_images):
-        skeleton = y[t]
+    for t in range(number_images):
+        skeleton = coordinates[t]
         img = data[t].astype(np.uint8)
         # draw the joints
         for i in range(14):
