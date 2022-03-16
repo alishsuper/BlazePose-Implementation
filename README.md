@@ -42,8 +42,6 @@ Head top
 ![image](https://user-images.githubusercontent.com/14852495/156509720-2d900f7b-8953-4219-9aa8-dea97dccb93c.png)
 ![image](https://user-images.githubusercontent.com/14852495/156510922-5d962d87-e021-4a3f-9c67-3afbd168a022.png)
 
-![image](https://user-images.githubusercontent.com/14852495/156573965-3776af14-ffaa-4e65-a5c9-eb4a7ebcf1b5.png)
-
 ## Train
 1. Pre-train the heatmap branch.
     Edit training settings in `config.py`. Set `train_mode = 0`.
