@@ -11,7 +11,7 @@ eval_mode = 0
 
 continue_train = 0
 
-best_pre_train = 200 # num of epoch where the training loss drops but testing accuracy achieve the optimal
+best_pre_train = 120 # num of epoch where the training loss drops but testing accuracy achieve the optimal
 
 # for test only
 epoch_to_test = 200

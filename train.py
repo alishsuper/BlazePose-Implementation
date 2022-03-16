@@ -4,7 +4,7 @@ import pathlib
 import tensorflow as tf
 from model import BlazePose
 from config import total_epoch, train_mode, best_pre_train, continue_train, batch_size
-from data import coordinates, visibility, heatmap_set, data, number_images
+from data import coordinates, visibility, heatmap_set, data, number_images, dataset
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
@@ -50,11 +50,18 @@ else:
             print(layer.name)
             layer.trainable = False
 
-x_train = data[:(number_images - 200)]
-y_train = [heatmap_set[:(number_images - 200)], coordinates[:(number_images - 200)], visibility[:(number_images - 200)]]
+if dataset == "lsp":
+    x_train = data[:(number_images - 400)]
+    y_train = [heatmap_set[:(number_images - 400)], coordinates[:(number_images - 400)], visibility[:(number_images - 400)]]
 
-x_val = data[-200:]
-y_val = [heatmap_set[-200:], coordinates[-200:], visibility[-200:]]
+    x_val = data[-400:-200]
+    y_val = [heatmap_set[-400:-200], coordinates[-400:-200], visibility[-400:-200]]
+else:
+    x_train = data[:(number_images - 2000)]
+    y_train = [heatmap_set[:(number_images - 2000)], coordinates[:(number_images - 2000)], visibility[:(number_images - 2000)]]
+
+    x_val = data[-2000:-1000]
+    y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000]]
 
 model.fit(x=x_train, y=y_train,
           batch_size=batch_size,
