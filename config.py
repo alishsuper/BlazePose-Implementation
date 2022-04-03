@@ -2,6 +2,7 @@ num_joints = 14     # lsp dataset
 
 batch_size = 128
 total_epoch = 200
+dataset = "lsp" # "lspet"
 
 # Train mode: 0-heatmap, 1-regression
 train_mode = 0

@@ -3,8 +3,8 @@ import os
 import pathlib
 import tensorflow as tf
 from model import BlazePose
-from config import total_epoch, train_mode, best_pre_train, continue_train, batch_size
-from data import coordinates, visibility, heatmap_set, data, number_images, dataset
+from config import total_epoch, train_mode, best_pre_train, continue_train, batch_size, dataset
+from data import coordinates, visibility, heatmap_set, data, number_images
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"

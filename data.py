@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints
+from config import num_joints, dataset
 
 # guassian generation
 def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
@@ -27,7 +27,6 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
     return heatmap
 
 # read annotations
-dataset = "lspet" # "lsp"
 annotations = loadmat("./dataset/" + dataset + "/joints.mat")
 if dataset == "lsp":
     # LSP

@@ -3,8 +3,8 @@ import tensorflow as tf
 import numpy as np
 import pathlib
 from model import BlazePose
-from config import epoch_to_test, eval_mode
-from data import data, label, dataset
+from config import epoch_to_test, eval_mode, dataset
+from data import data, label
 
 def Eclidian2(a, b):
 # Calculate the square of Eclidian distance
